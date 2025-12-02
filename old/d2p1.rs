@@ -1,4 +1,8 @@
 fn number_is_valid(num: &str) -> bool {
+    // for part 1 here, must repeat exactly twice
+    if num.len() % 2 != 0 {
+        return true;
+    }
     let mut num_is_valid = true;
 
     // worst case tessalation size is half the length of the number
@@ -7,7 +11,7 @@ fn number_is_valid(num: &str) -> bool {
     // speaking english: a number is invalid if ANY tessalation exists for it
 
     // for each possible window length
-    for window_length in 1..max_tessalation_size + 1 {
+    for window_length in max_tessalation_size..max_tessalation_size + 1 {
         // skip anything which does not evenly divide
         if num.len() % window_length != 0 {
             continue;
@@ -51,6 +55,7 @@ fn main() {
 
         // for each number in range, check if it meets criteria
         for num in start..=end {
+            println!("Current number: {}", num);
             if !number_is_valid(&num.to_string()) {
                 println!("Invalid number found: {}", num);
                 sum_of_invalid_numbers += num as u64;
