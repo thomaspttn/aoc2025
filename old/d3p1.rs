@@ -1,5 +1,3 @@
-use std::ops::Range;
-
 // meta goal here right: now instead of ones and tens we have all the way up to 10^12
 // start by finding highest digit between [0..n-12], mark index as i
 // then find highest digit between [i+1..n-11], mark index as j
@@ -22,24 +20,23 @@ fn modified_find_highest_digit(line: &Vec<u32>, start_idx: u32, end_idx: u32) ->
     (highest_digit, highest_digit_idx)
 }
 
-fn get_highest_joltage(line: &str) -> u64 {
+fn get_highest_joltage(line: &str) -> u32 {
     // split on char, parse each as u32, collect into a vector
     let line_numbers = line
         .chars()
         .map(|c| c.to_digit(10).unwrap())
         .collect::<Vec<u32>>();
 
-    let mut highest_joltage = 0u64;
+    let mut highest_joltage = 0;
     let mut start_idx = 0u32;
-    for power in (0..=11).rev() {
+    for power in 12..=0 {
         let range_end = line_numbers.len() as u32 - power;
         let (highest_digit, highest_digit_idx) =
             modified_find_highest_digit(&line_numbers, start_idx, range_end);
 
         start_idx = highest_digit_idx + 1;
-        highest_joltage += (highest_digit as u64) * 10u64.pow(power);
+        highest_joltage += highest_digit * 10u32.pow(power);
     }
-    println!("Highest Joltage for line {}: {}", line, highest_joltage);
     highest_joltage
 }
 
