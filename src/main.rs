@@ -1,60 +1,69 @@
-use std::ops::Range;
+fn determine_number_adjacent(grid: &Vec<Vec<char>>, row: usize, col: usize) -> usize {
+    let directions = [
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, -1),
+        (0, 1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+    ];
 
-// meta goal here right: now instead of ones and tens we have all the way up to 10^12
-// start by finding highest digit between [0..n-12], mark index as i
-// then find highest digit between [i+1..n-11], mark index as j
-// then find highest digit between [j+1..n-10], mark index as k
-// ...
+    let mut count = 0;
+    let rows = grid.len() as isize;
+    let cols = grid[0].len() as isize;
 
-fn modified_find_highest_digit(line: &Vec<u32>, start_idx: u32, end_idx: u32) -> (u32, u32) {
-    // goal here is to find the highest digit in line between start_idx and end_idx
-    // returns the highest digit and the index it was found at
-    let mut highest_digit = 0;
-    let mut highest_digit_idx = start_idx;
+    for (dr, dc) in directions.iter() {
+        let new_row = row as isize + dr;
+        let new_col = col as isize + dc;
 
-    for idx in start_idx..end_idx {
-        let digit = line[idx as usize];
-        if digit > highest_digit {
-            highest_digit = digit;
-            highest_digit_idx = idx;
+        if new_row >= 0 && new_row < rows && new_col >= 0 && new_col < cols {
+            if grid[new_row as usize][new_col as usize] == '@' {
+                count += 1;
+            }
         }
     }
-    (highest_digit, highest_digit_idx)
+
+    count
 }
-
-fn get_highest_joltage(line: &str) -> u64 {
-    // split on char, parse each as u32, collect into a vector
-    let line_numbers = line
-        .chars()
-        .map(|c| c.to_digit(10).unwrap())
-        .collect::<Vec<u32>>();
-
-    let mut highest_joltage = 0u64;
-    let mut start_idx = 0u32;
-    for power in (0..=11).rev() {
-        let range_end = line_numbers.len() as u32 - power;
-        let (highest_digit, highest_digit_idx) =
-            modified_find_highest_digit(&line_numbers, start_idx, range_end);
-
-        start_idx = highest_digit_idx + 1;
-        highest_joltage += (highest_digit as u64) * 10u64.pow(power);
-    }
-    println!("Highest Joltage for line {}: {}", line, highest_joltage);
-    highest_joltage
-}
-
 fn main() {
     // read each line in a file called input.txt
     let input = std::fs::read_to_string("input.txt").expect("Failed to read file");
 
-    let mut total_joltage = 0;
+    // parse into a 2D vector of chars
+    let mut grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
 
-    // for line in input, print the line
-    for line in input.lines() {
-        println!("{}", line);
+    let mut total_removed = 0;
+    let mut keep_going = true;
+    while keep_going {
+        let mut num_with_less_than_four_touching = 0;
+        let mut coords_to_remove: Vec<(usize, usize)> = Vec::new();
 
-        total_joltage += get_highest_joltage(line);
+        // iter through grid, look for '@' with less than 4 adjacent '@'
+        for i in 0..grid.len() {
+            for j in 0..grid[i].len() {
+                if grid[i][j] != '@' {
+                    continue;
+                }
+                let num_adjacent = determine_number_adjacent(&grid, i, j);
+                if num_adjacent < 4 {
+                    num_with_less_than_four_touching += 1;
+                    coords_to_remove.push((i, j));
+                }
+            }
+        }
+
+        // now, remove all the coords we found
+        for (i, j) in coords_to_remove.iter() {
+            grid[*i][*j] = '.';
+        }
+
+        // add up all the ones we removed this round, if none, we are done
+        total_removed += num_with_less_than_four_touching;
+        if num_with_less_than_four_touching == 0 {
+            keep_going = false;
+        }
     }
-
-    println!("Total joltage: {}", total_joltage);
+    println!("Total removed: {}", total_removed);
 }
